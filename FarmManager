@@ -1,0 +1,84 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+public class FarmManager : MonoBehaviour
+{
+    public PlantItem selectedPlant;
+    public bool isPlanting = false;
+    public int money = 100;
+    public TextMeshProUGUI moneyText;
+
+    public bool isSelecting = false;
+    public int selectedTool = 0;
+    //1-water 2-fertilizer 3- buy plot
+
+    public Image[] buttonsImg;
+    public Sprite normalButton;
+    public Sprite selectedButton;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        moneyText.text = "$" + money;
+    }
+
+    public void SelectedPlant(PlantItem newPlant)
+    {
+        if(selectedPlant == newPlant)
+        {
+            CheckSelection();
+            
+        }
+        else
+        {
+            CheckSelection();
+            selectedPlant = newPlant;
+            isPlanting = true;
+
+        }
+    }
+
+    public void SelectTool(int toolNumber)
+    {
+        if(toolNumber == selectedTool)
+        {
+            //deselect
+            CheckSelection();
+        }
+        else
+        {
+            //select
+            CheckSelection();
+            isSelecting = true;
+            selectedTool = toolNumber;
+            buttonsImg[toolNumber - 1].sprite = selectedButton;
+        }
+    }
+
+    void CheckSelection()
+    {
+        if (isPlanting)
+        {
+            isPlanting = false;
+            selectedPlant = null;
+        }
+        if (isSelecting)
+        {
+            if(selectedTool > 0)
+            {
+                buttonsImg[selectedTool - 1].sprite = normalButton;
+            }
+            isSelecting = false;
+            selectedTool = 0;
+        }
+    }
+
+    public void Transaction(int value)
+    {
+        money += value;
+        moneyText.text = "$" + money;
+    }
+}
