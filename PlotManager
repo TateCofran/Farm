@@ -1,0 +1,204 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PlotManager : MonoBehaviour
+{
+    
+
+    MeshFilter plant;
+    MeshCollider plantCollider;
+    bool isPlanted = false;
+        
+    public int plantStage = 0;
+    float timer;
+
+    public Color availableColor = Color.green;
+    public Color unavailableColor = Color.red;
+
+    [SerializeField] PlantObject selectedPlant;
+
+
+    FarmManager fm;
+
+    
+    public Material[] currentGroundMaterial;
+
+    bool isDry = true;
+    public Renderer grass;
+    public Renderer dirt;
+    public Renderer plot;
+
+    float speedGrowth = 1f;
+
+    public bool isBought = true;
+    private void Start()
+    {
+        plant = transform.GetChild(0).GetComponent<MeshFilter>();
+        plantCollider = transform.GetChild(0).GetComponent<MeshCollider>();
+        selectedPlant.quantity = 9;
+        fm = FindObjectOfType<FarmManager>();
+
+        
+        plot = GetComponent<Renderer>();
+
+        if (isBought)
+        {
+            plot.sharedMaterial = currentGroundMaterial[1];
+        }
+        else
+        {
+            plot.sharedMaterial = currentGroundMaterial[2];
+        }
+        
+
+    }
+    void Update()
+    {
+        if (isPlanted && !isDry)
+        {
+            timer -= speedGrowth * Time.deltaTime;
+
+            if(timer < 0 && plantStage < selectedPlant.plantStages.Length - 1)
+            {
+                timer = selectedPlant.timeBtwStages;
+                plantStage++;
+                UpdatePlant();
+            }
+        }
+    }
+
+    private void OnMouseDown()
+    {
+        if (isPlanted)
+        {
+            if(plantStage == selectedPlant.plantStages.Length - 1 && !fm.isPlanting && !fm.isSelecting)
+            {
+                Harvest();
+            }        
+        }
+        else if(fm.isPlanting && fm.selectedPlant.plant.buyPrice <= fm.money && isBought)
+        {
+            Plant(fm.selectedPlant.plant);
+        }
+        if (fm.isSelecting)
+        {
+            switch (fm.selectedTool)
+            {
+                case 1:
+                    if (isBought)
+                    {
+                        isDry = false;
+                        plot.sharedMaterial = currentGroundMaterial[0];
+                    }
+                    break;
+                case 2:
+                    if(fm.money >= 10 && isBought)
+                    {
+                        if (speedGrowth < 2)
+                        {
+                            speedGrowth += 0.2f;
+                        }
+                    }                   
+                    break;
+                case 3:
+                    if(fm.money >= 50 && !isBought)
+                    {
+                        fm.Transaction(-50);
+                        isBought = true;
+                        plot.sharedMaterial = currentGroundMaterial[1];
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    private void OnMouseOver()
+    {
+        if (fm.isPlanting)
+        {
+            if(isPlanted || fm.selectedPlant.plant.buyPrice > fm.money || !isBought)
+            {
+                plot.GetComponent<Renderer>().material.color = unavailableColor;
+            }
+            else
+            {
+                plot.GetComponent<Renderer>().material.color = availableColor;
+            }           
+        }
+        if (fm.isSelecting)
+        {
+            switch (fm.selectedTool)
+            {
+                case 1:
+                case 2:
+                    if (isBought && fm.money >= (fm.selectedTool-1) * 10)
+                    {
+                        plot.GetComponent<Renderer>().material.color = availableColor;
+                    }
+                    else
+                    {
+                        plot.GetComponent<Renderer>().material.color = unavailableColor;
+                    }
+                    break;
+                case 3:
+                    if (!isBought && fm.money >= 100)
+                    {
+                        plot.GetComponent<Renderer>().material.color = availableColor;
+                    }
+                    else
+                    {
+                        plot.GetComponent<Renderer>().material.color = unavailableColor;
+                    }
+                    break;
+                default:
+                    plot.GetComponent<Renderer>().material.color = unavailableColor;
+                    break;
+            }
+        }
+    }
+
+    private void OnMouseExit()
+    {
+        plot.GetComponent<Renderer>().material.color = Color.white;
+    }
+    void Harvest()
+    {
+        Debug.Log("Harvested");
+        isPlanted = false;
+        plant.gameObject.SetActive(false);
+        
+        fm.Transaction(selectedPlant.sellPrice);
+        
+        selectedPlant.quantity++;
+        Debug.Log("You have " + selectedPlant.quantity + " " + selectedPlant.plantName);
+
+        isDry = true;
+        plot.sharedMaterial = currentGroundMaterial[1];
+
+        speedGrowth = 1f;
+    }
+
+    void Plant(PlantObject newPlant)
+    {
+        selectedPlant = newPlant;
+        Debug.Log("Planted");
+        isPlanted = true;
+
+        fm.Transaction(-selectedPlant.buyPrice);
+
+        plantStage = 0;
+        UpdatePlant();
+        timer = selectedPlant.timeBtwStages;
+        plant.gameObject.SetActive(true);
+        selectedPlant.quantity--;
+        Debug.Log("You planted " + selectedPlant.plantName + ", you have " + selectedPlant.quantity + " rest");
+    }
+    
+    void UpdatePlant()
+    {
+        plant.mesh = selectedPlant.plantStages[plantStage];
+    }
+}
