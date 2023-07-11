@@ -1,0 +1,57 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class BuildManagement : MonoBehaviour
+{
+    MeshFilter building;
+    MeshCollider buildingCollider;
+
+    BuildingObject selectedBuilding;
+    BuildingManager bm;
+    FarmManager fm;
+    PlotManager pm;
+
+    bool isBuilt = false;
+    // Start is called before the first frame update
+    void Start()
+    {
+        building = transform.GetChild(1).GetComponent<MeshFilter>();
+        buildingCollider = transform.GetChild(1).GetComponent<MeshCollider>();
+        bm = FindObjectOfType<BuildingManager>();
+        fm = FindObjectOfType<FarmManager>();
+        pm = FindObjectOfType<PlotManager>();
+    }
+
+    // Update is called once per frame
+    void OnMouseDown()
+    {
+        if (isBuilt)
+        {
+            Demolish();
+        }
+        else if (bm.selectedBuilding.building.buyPrice <= fm.money && pm.isBought)
+        {
+            Built(bm.selectedBuilding.building);
+        }
+    }
+
+    void Built(BuildingObject newBuilding)
+    {
+        selectedBuilding = newBuilding;
+        Debug.Log("Built");
+        isBuilt = true;
+
+        fm.Transaction(-selectedBuilding.buyPrice);
+
+        building.gameObject.SetActive(true);
+    }
+
+    void Demolish()
+    {
+        Debug.Log("Demolished " + selectedBuilding.name);
+        isBuilt = false;
+        building.gameObject.SetActive(false);
+        fm.Transaction(-selectedBuilding.sellPrice);
+    }
+}
