@@ -1,0 +1,38 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class StoreManager : MonoBehaviour
+{
+    public GameObject plantItem;
+    public GameObject plantPage;
+    List<PlantObject> plantObjects = new List<PlantObject>();
+
+    public GameObject buildingItem;
+    public GameObject buildingPage;
+    List<BuildingObject> buildingObjects = new List<BuildingObject>();
+
+    private void Awake()
+    {
+        if (plantPage == true)
+        {
+            var loadPlants = Resources.LoadAll("Plants", typeof(PlantObject));
+
+            foreach (var plant in loadPlants)
+            {
+                PlantItem newPlant = Instantiate(plantItem, transform).GetComponent<PlantItem>();
+                newPlant.plant = (PlantObject)plant;
+            }
+        }
+
+        if (buildingPage == true)
+        {
+            var loadBuildings = Resources.LoadAll("Buildings", typeof(BuildingObject));
+            foreach (var building in loadBuildings)
+            {
+                BuildingItem newBuilding = Instantiate(buildingItem, transform).GetComponent<BuildingItem>();
+                newBuilding.building = (BuildingObject)building;
+            }
+        }
+    }
+}
